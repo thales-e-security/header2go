@@ -17,4 +17,5 @@ install:
 - $GOPATH/bin/dep ensure --vendor-only
 
 script:
+- go vet ./...
 - $GOPATH/bin/goveralls -service=travis-ci
