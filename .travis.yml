@@ -14,6 +14,8 @@ before_install:
 - go get github.com/mattn/goveralls
 # Install linter
 - go get -u golang.org/x/lint/golint
+# Install gosec
+- go get github.com/securego/gosec/cmd/gosec/...
 
 install:
 - $GOPATH/bin/dep ensure --vendor-only
@@ -21,4 +23,5 @@ install:
 script:
 - go vet ./...
 - golint . translate/...
+- gosec ./...
 - $GOPATH/bin/goveralls -service=travis-ci
