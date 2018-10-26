@@ -3,6 +3,8 @@
 header2go generates skeleton Go implementations of C header files, which can be compiled with cgo to produce a shared
 library.
 
+header2go is licensed under an MIT license (see `LICENSE`).
+
 ## Installation
 
 Please download a release from the releases page. We will release early and often, so building from source should
@@ -40,11 +42,11 @@ which will produce a `library.so` file that can be linked into C programs.
 ## Background
 
 This project makes it easier to implement legacy APIs, described by C header files, in Go. The
-original motivation was PKCS #11, a popular crypto API described by C header files and linked into dependent 
+original motivation was PKCS&nbsp;#11, a popular crypto API described by C header files and linked into dependent 
 applications. We were interested in implementing this API using Go, but found the process of producing
 the necessary CGo boiler-plate code rather tedious and error-prone.
 
-header2go isn't yet capable of processing the whole PKCS #11 header set. 90% of the contents are successfully parsed at
+header2go isn't yet capable of processing the whole PKCS&nbsp;#11 header set. 90% of the contents are successfully parsed at
 present and the tool takes care to output as much useful boilerplate as possible, even in the face of errors.
 
 ### Output
@@ -217,3 +219,11 @@ if you include some C code that proves your generated code works, see
 - [ ] Pointers to structs that contain pointers. (Makes the `convertFromXXX` functions more complicated).
 - [ ] Function pointers (e.g. `typedef CK_RV(*CK_C_Finalize) (CK_VOID_PTR pReserved);`, which is a type called `CK_C_Finalize` that is a function returning `CK_RV` and taking an arguments of type `CK_VOID_PTR`.)
 - [ ] Arbitrary return types
+- [ ] Submit a PR to the github.com/elliotchance/c2go to refactor their code, ensuring we don't need to copy bits across to this project.
+
+## Acknowledgements
+
+This project uses the Clang AST parsing capabilities from https://github.com/elliotchance/c2go. Mostly this is achieved
+by importing packages, however a small amount of code has been copied into `translate/astparse/parse.go`. The license
+and copyright information is noted in that file.
+
