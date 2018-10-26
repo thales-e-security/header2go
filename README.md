@@ -102,21 +102,21 @@ typedef struct _StructA {
 import "C"
 
 func convertToStructB(s C.StructB) StructB {
-	return StructB{
-		Val3: int16(s.val3),
-	}
+  return StructB{
+    Val3: int16(s.val3),
+  }
 }
 
 func convertToStructA(s C.StructA) StructA {
-	return StructA{
-		Val1: int16(s.val1),
-		Val2: convertToStructB(s.val2),
-	}
+  return StructA{
+    Val1: int16(s.val1),
+    Val2: convertToStructB(s.val2),
+  }
 }
 
 //export functionA
 func functionA(a1 C.StructA, a2 C.long) {
-	goFunctionA(convertToStructA(a1), int32(a2))
+  goFunctionA(convertToStructA(a1), int32(a2))
 }
 
 func main() {}
@@ -129,16 +129,16 @@ func main() {}
 package main
 
 type StructB struct {
-	Val3 int16
+  Val3 int16
 }
 
 type StructA struct {
-	Val1 int16
-	Val2 StructB
+  Val1 int16
+  Val2 StructB
 }
 
 func goFunctionA(a1 StructA, a2 int32) {
-	// TODO implement goFunctionA
+  // TODO implement goFunctionA
 }
 
 ```
@@ -164,27 +164,27 @@ Here is the Go struct that gets generated for the `buffer` parameter:
 
 ```go
 type Uint32Array struct {
-	cdata  *C.unsigned_long
-	godata []uint32
+  cdata  *C.unsigned_long
+  godata []uint32
 }
 
 func (a *Uint32Array) Slice(len int) []uint32 {
-	if a.godata != nil {
-		return a.godata
-	}
+  if a.godata != nil {
+    return a.godata
+  }
 
-	a.godata = make([]uint32, len)
-	for i := 0; i < len; i++ {
-		a.godata[i] = uint32(*(*C.unsigned_long)(unsafe.Pointer(uintptr(unsafe.Pointer(a.cdata)) + uintptr(i)*unsafe.Sizeof(*a.cdata))))
-	}
+  a.godata = make([]uint32, len)
+  for i := 0; i < len; i++ {
+    a.godata[i] = uint32(*(*C.unsigned_long)(unsafe.Pointer(uintptr(unsafe.Pointer(a.cdata)) + uintptr(i)*unsafe.Sizeof(*a.cdata))))
+  }
 
-	return a.godata
+  return a.godata
 }
 
 func (a *Uint32Array) writeBack() {
-	for i := range a.godata {
-		*(*C.unsigned_long)(unsafe.Pointer(uintptr(unsafe.Pointer(a.cdata)) + uintptr(i)*unsafe.Sizeof(*a.cdata))) = C.unsigned_long(a.godata[i])
-	}
+  for i := range a.godata {
+    *(*C.unsigned_long)(unsafe.Pointer(uintptr(unsafe.Pointer(a.cdata)) + uintptr(i)*unsafe.Sizeof(*a.cdata))) = C.unsigned_long(a.godata[i])
+  }
 }
 ```
 
@@ -192,10 +192,10 @@ In the Go implementation, the developer knows how to interpret this value:
 
 ```go
 func goWriteToMyBuffer(buffer *Uint32Array, maxLength int16, bytesWritten *Int16Array) {
-	sizedBuffer = buffer.Slice(int(maxLength))
-	
-	// sizedBuffer is now a slice. Writing to its elements will be copied back to the
-	// C memory.
+  sizedBuffer = buffer.Slice(int(maxLength))
+  
+  // sizedBuffer is now a slice. Writing to its elements will be copied back to the
+  // C memory.
 }
 ```
 
