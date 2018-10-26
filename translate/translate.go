@@ -25,10 +25,10 @@ import (
 	"strings"
 	"text/template"
 
-	"git.tesfabric.com/goethite/header2go/translate/astparse"
-	errs "git.tesfabric.com/goethite/header2go/translate/errors"
 	"github.com/elliotchance/c2go/ast"
 	"github.com/pkg/errors"
+	"github.com/thales-e-security/header2go/translate/astparse"
+	errs "github.com/thales-e-security/header2go/translate/errors"
 )
 
 // templateData contains the data needed to populate the source templates.

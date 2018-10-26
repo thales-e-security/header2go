@@ -19,9 +19,8 @@ import (
 	"log"
 	"os"
 
-	"git.tesfabric.com/goethite/header2go/translate/errors"
-
-	"git.tesfabric.com/goethite/header2go/translate"
+	"github.com/thales-e-security/header2go/translate"
+	"github.com/thales-e-security/header2go/translate/errors"
 )
 
 //go:generate go-bindata -o translate/bindata.go -pkg translate translate/templates/...

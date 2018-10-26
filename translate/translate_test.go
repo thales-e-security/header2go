@@ -21,10 +21,9 @@ import (
 	"path"
 	"testing"
 
-	"git.tesfabric.com/goethite/header2go/translate/errors"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/thales-e-security/header2go/translate/errors"
 )
 
 const testDir = "testdata"

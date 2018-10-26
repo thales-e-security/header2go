@@ -20,9 +20,8 @@ import (
 	"regexp"
 	"strings"
 
-	"git.tesfabric.com/goethite/header2go/translate/errors"
-
 	"github.com/elliotchance/c2go/ast"
+	"github.com/thales-e-security/header2go/translate/errors"
 )
 
 // CFuncDef describes a function found in the C header file.

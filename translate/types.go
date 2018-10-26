@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"strings"
 
-	"git.tesfabric.com/goethite/header2go/translate/astparse"
+	"github.com/thales-e-security/header2go/translate/astparse"
 )
 
 // keywords is a map of all the language keywords

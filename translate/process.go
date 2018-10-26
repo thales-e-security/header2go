@@ -16,8 +16,8 @@
 package translate
 
 import (
-	"git.tesfabric.com/goethite/header2go/translate/astparse"
-	"git.tesfabric.com/goethite/header2go/translate/errors"
+	"github.com/thales-e-security/header2go/translate/astparse"
+	"github.com/thales-e-security/header2go/translate/errors"
 )
 
 // Process processes the header file and writes the corresponding main.go and defs.go file

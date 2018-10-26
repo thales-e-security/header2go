@@ -21,8 +21,8 @@ import (
 	"strconv"
 	"strings"
 
-	"git.tesfabric.com/goethite/header2go/translate/errors"
 	"github.com/elliotchance/c2go/ast"
+	"github.com/thales-e-security/header2go/translate/errors"
 )
 
 // A CStructInstance contains information about a specific use of a struct, for instance as a field in another struct,
