@@ -12,10 +12,13 @@ before_install:
 - chmod +x $GOPATH/bin/dep
 # Install coverage tool
 - go get github.com/mattn/goveralls
+# Install linter
+- go get -u golang.org/x/lint/golint
 
 install:
 - $GOPATH/bin/dep ensure --vendor-only
 
 script:
 - go vet ./...
+- golint . translate/...
 - $GOPATH/bin/goveralls -service=travis-ci
