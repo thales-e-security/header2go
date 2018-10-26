@@ -1,5 +1,8 @@
 # header2go
 
+[![Build Status](https://travis-ci.com/thales-e-security/header2go.svg?branch=master)](https://travis-ci.com/thales-e-security/header2go)
+[![Coverage Status](https://coveralls.io/repos/github/thales-e-security/header2go/badge.svg?branch=master)](https://coveralls.io/github/thales-e-security/header2go?branch=master)
+
 header2go generates skeleton Go implementations of C header files, which can be compiled with cgo to produce a shared
 library.
 
