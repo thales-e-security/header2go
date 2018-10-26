@@ -1,0 +1,17 @@
+package main
+
+{{range .Types}}
+type {{.GoStructName}} struct {
+{{range .GetFields}} {{.GoName}} {{if ne 0 .ArrayCount}}[{{.ArrayCount}}]{{end}}{{.Type.GoStructName}}
+{{end}}
+}
+{{end}}
+
+{{range .Funcs}}
+
+func {{.GoName}} ({{range .GetParams}} {{.SafeName}} {{.GoArgType}},{{end}}) {{if .GetReturnType}} {{.GetReturnType.Type.GoStructName}} {{end}} {
+    // TODO implement {{.GoName}}{{if .GetReturnType}}
+    return {{.GetReturnType.Type.EmptyValue}}{{end}}
+}
+
+{{end}}

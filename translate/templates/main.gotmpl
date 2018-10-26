@@ -1,0 +1,91 @@
+package main
+
+/*
+{{range .Types}}
+{{if ne "" .TypeName -}} typedef {{end -}} struct {{.Name}} {
+{{range .GetFields}}  {{.Type.CanonicalName}} {{.Name}}{{if ne 0 .ArrayCount}}[{{.ArrayCount}}]{{end}};
+{{end}}} {{.TypeName}};
+{{end}}
+*/
+import "C"
+{{- if .PointerTypes}}
+import "unsafe"
+{{end}}
+
+{{range .PointerTypes}}
+type {{.GoArrayTypeName}} struct {
+	cdata  *{{.CgoStructName}}
+	godata []{{.GoStructName}}
+}
+
+func (a *{{.GoArrayTypeName}}) Slice(len int) []{{.GoStructName}} {
+	if a.godata != nil {
+		return a.godata
+	}
+
+	a.godata = make([]{{.GoStructName}}, len)
+	for i := 0; i < len; i++ {
+		a.godata[i] = {{.ConversionFunction}}(*(*{{.CgoStructName}})(unsafe.Pointer(uintptr(unsafe.Pointer(a.cdata)) + uintptr(i)*unsafe.Sizeof(*a.cdata))))
+	}
+
+	return a.godata
+}
+
+
+func (a *{{.GoArrayTypeName}}) writeBack() {
+	for i := range a.godata {
+		*(*{{.CgoStructName}})(unsafe.Pointer(uintptr(unsafe.Pointer(a.cdata)) + uintptr(i)*unsafe.Sizeof(*a.cdata))) = {{.RConversionFunction}}(a.godata[i])
+	}
+}
+{{end}}
+
+{{range .Types}}
+
+func convertTo{{.GoStructName}}(s {{.CgoStructName}}) {{.GoStructName}} {
+    return {{.GoStructName}} {
+        {{range .GetFields}}{{.GoName}}: {{.ArrayAwareConversion}}(s.{{.SafeName}}),
+        {{end}}
+    }
+}
+{{end}}
+
+{{range .TypesNeedingConversion}}
+
+func convertFrom{{.GoStructName}}(s {{.GoStructName}}) {{.CgoStructName}} {
+    return {{.CgoStructName}} {
+        {{range .GetFields}}{{.SafeName}}: {{.Type.RConversionFunction}}(s.{{.GoName}}),
+        {{end}}
+    }
+}
+{{end}}
+
+{{range .ArrayTypes}}
+
+func convertTo{{.Type.GoStructName}}Array{{.ArrayCount}} (a [{{.ArrayCount}}]{{.Type.CgoStructName}}) (res [{{.ArrayCount}}]{{.Type.GoStructName}}) {
+    for i := range a {
+        res[i] = {{.Type.ConversionFunction}}(a[i])
+    }
+    return
+}
+{{end}}
+
+{{range .Funcs}}
+
+//export {{.Name}}
+func {{.Name}} ({{range .GetParams}} {{.SafeName}} {{.Pointers}}{{.Type.CgoStructName}},{{end}}) {{if .GetReturnType}} {{.GetReturnType.Type.CgoStructName}} {{end}} {
+    {{- range .GetParams}}{{if eq 1 .PointerCount}}
+    var {{.ParamAsArg}} *{{.Type.GoArrayTypeName}}
+    if {{.SafeName}} != nil {
+        {{.ParamAsArg}} = &{{.Type.GoArrayTypeName}}{cdata: {{.SafeName}}}
+    }
+
+    {{end}}{{end}}
+    {{- if .GetReturnType}}res := {{end}} {{.GoName}}({{range .GetParams}} {{.ParamAsArg}},{{end}}){{if .GetReturnType}}
+    {{- range .GetParams}}{{if eq 1 .PointerCount}}
+    {{.ParamAsArg}}.writeBack(){{end}}{{end}}
+    return {{.GetReturnType.Type.CgoStructName}}(res) {{end}}
+}
+
+{{end}}
+
+func main() {}
