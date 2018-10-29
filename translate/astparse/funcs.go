@@ -178,7 +178,7 @@ func getVoidPointerType(functionName, paramName string, structsByName map[string
 	for _, mapping := range cfg.VoidType {
 		if mapping.Function == functionName && mapping.Parameter == paramName {
 			if mapping.Struct != "" {
-				return structsByName[mapping.Struct], 0
+				return structsByName["struct "+mapping.Struct], 0
 			}
 
 			mappedType := typesByName[mapping.Type]

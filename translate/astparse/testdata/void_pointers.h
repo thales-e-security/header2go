@@ -1,5 +1,5 @@
-typedef struct {
-  int a;
-} TypeA;
+typedef struct {} TypeA;
 
-int functionA(void *a1, long a2);
+struct B {};
+
+int functionA(void *a1, void *a2);

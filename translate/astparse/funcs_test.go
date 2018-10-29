@@ -94,7 +94,10 @@ func TestParseVoidPointers(t *testing.T) {
 	mark = context.Mark()
 	funcs, usedTypes := ProcessFuncs(context, functions, structs, types,
 		config.ParseConfig{
-			VoidType: []config.VoidType{{Function: "functionA", Parameter: "a1", Type: "TypeA"}},
+			VoidType: []config.VoidType{
+				{Function: "functionA", Parameter: "a1", Type: "TypeA"},
+				{Function: "functionA", Parameter: "a2", Struct: "B"},
+			},
 		})
 	require.False(t, context.HasErrors(mark), context.String())
 
@@ -102,8 +105,9 @@ func TestParseVoidPointers(t *testing.T) {
 
 	assert.True(t, funcs[0].Params[0].WasVoidPointer)
 
-	require.Len(t, usedTypes, 1)
+	require.Len(t, usedTypes, 2)
 	assert.Equal(t, "TypeA", usedTypes[0].TypeName)
+	assert.Equal(t, "B", usedTypes[1].Name)
 }
 
 func TestParseVoidPointersWithoutMapping(t *testing.T) {
