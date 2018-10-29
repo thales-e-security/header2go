@@ -59,6 +59,7 @@ func configFromString(config string) (cfg parseConfig, err error) {
 
 func configFromFile(configFile string) (parseConfig, error) {
 
+	// #nosec G304 We don't care which file the user wants to try and read; if they have the permission, it will work.
 	configBytes, err := ioutil.ReadFile(configFile)
 	if err != nil {
 		return parseConfig{}, err
