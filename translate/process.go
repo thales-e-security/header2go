@@ -23,11 +23,20 @@ import (
 // Process processes the header file and writes the corresponding main.go and defs.go file
 // into outputDir. If errors are encountered, they are logged in the context and processing
 // continues. The goal is to produce output in almost every instance.
-func Process(context *errors.ParseContext, headerFile, outputDir string) error {
+func Process(context *errors.ParseContext, headerFile, outputDir, configFile string) error {
+	var cfg parseConfig
+	if configFile != "" {
+		var err error
+		cfg, err = configFromFile(configFile)
+		if err != nil {
+			return err
+		}
+	}
+
 	functions, recordDeclarations, typeDeclarations, err := astparse.ReadAst(headerFile)
 	if err != nil {
 		return err
 	}
 
-	return Translate(context, functions, recordDeclarations, typeDeclarations, outputDir)
+	return Translate(context, functions, recordDeclarations, typeDeclarations, outputDir, cfg)
 }

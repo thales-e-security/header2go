@@ -42,7 +42,7 @@ type templateData struct {
 
 // Translate processes the AST data (function definitions, type definitions) to produce the output files.
 func Translate(context *errs.ParseContext, functions []*ast.FunctionDecl, recordDeclarations []*ast.RecordDecl,
-	typeDeclarations []*ast.TypedefDecl, outputDir string) error {
+	typeDeclarations []*ast.TypedefDecl, outputDir string, cfg parseConfig) error {
 
 	// Process the raw AST data and convert into our representation of structs and types
 	structs, types := astparse.ProcessTypes(context, recordDeclarations, typeDeclarations)

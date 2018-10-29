@@ -31,42 +31,42 @@ const testDir = "testdata"
 // Tests are defined individually to aid debugging.
 
 func TestBasicTypes(t *testing.T) {
-	runTest(t, "01_basic_types")
+	runTest(t, "01_basic_types", "")
 }
 
 func TestSimpleStructs(t *testing.T) {
-	runTest(t, "02_simple_structs")
+	runTest(t, "02_simple_structs", "")
 }
 
 func TestSimpleStructsWithReturnTypes(t *testing.T) {
-	runTest(t, "03_simple_structs_with_return_types")
+	runTest(t, "03_simple_structs_with_return_types", "")
 }
 
 func TestSimplePointerArgs(t *testing.T) {
-	runTest(t, "04_simple_pointer_args")
+	runTest(t, "04_simple_pointer_args", "")
 }
 
 func TestTypeDefsOfBasicTypes(t *testing.T) {
-	runTest(t, "05_typedefs_of_basic_types")
+	runTest(t, "05_typedefs_of_basic_types", "")
 }
 
 func TestStructsWithKeywords(t *testing.T) {
-	runTest(t, "06_structs_with_keywords")
+	runTest(t, "06_structs_with_keywords", "")
 }
 
 func TestParamsWithKeywords(t *testing.T) {
-	runTest(t, "07_params_with_keywords")
+	runTest(t, "07_params_with_keywords", "")
 }
 
 func TestPointersToStructs(t *testing.T) {
-	runTest(t, "08_pointers_to_structs_with_basic_types")
+	runTest(t, "08_pointers_to_structs_with_basic_types", "")
 }
 
 func TestFixedLengthArrays(t *testing.T) {
-	runTest(t, "09_fixed_length_arrays")
+	runTest(t, "09_fixed_length_arrays", "")
 }
 
-func runTest(t *testing.T, testName string) {
+func runTest(t *testing.T, testName, configFile string) {
 	/*
 		For each directory <X>, we expect to find:
 
@@ -81,7 +81,7 @@ func runTest(t *testing.T, testName string) {
 
 	context := errors.NewParseContext()
 	mark := context.Mark()
-	err = Process(context, path.Join(testDir, testName, "input.h"), outDir)
+	err = Process(context, path.Join(testDir, testName, "input.h"), outDir, configFile)
 	require.NoError(t, err)
 	require.False(t, context.HasErrors(mark))
 
