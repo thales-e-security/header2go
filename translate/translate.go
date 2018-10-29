@@ -25,6 +25,8 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/thales-e-security/header2go/translate/config"
+
 	"github.com/elliotchance/c2go/ast"
 	"github.com/pkg/errors"
 	"github.com/thales-e-security/header2go/translate/astparse"
@@ -42,13 +44,13 @@ type templateData struct {
 
 // Translate processes the AST data (function definitions, type definitions) to produce the output files.
 func Translate(context *errs.ParseContext, functions []*ast.FunctionDecl, recordDeclarations []*ast.RecordDecl,
-	typeDeclarations []*ast.TypedefDecl, outputDir string, cfg parseConfig) error {
+	typeDeclarations []*ast.TypedefDecl, outputDir string, cfg config.ParseConfig) error {
 
 	// Process the raw AST data and convert into our representation of structs and types
 	structs, types := astparse.ProcessTypes(context, recordDeclarations, typeDeclarations)
 
 	// Process the raw AST data for functions, noting which structs are actually used (in the signatures).
-	funcs, usedStructs := astparse.ProcessFuncs(context, functions, structs, types)
+	funcs, usedStructs := astparse.ProcessFuncs(context, functions, structs, types, cfg)
 
 	// Find the types used as pointers (and also log an error if we find double-pointers or return-type pointers)
 	pointerTypes, typesNeedingConversion, funcs := listPointerTypes(context, funcs)

@@ -19,6 +19,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/thales-e-security/header2go/translate/config"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/thales-e-security/header2go/translate/errors"
@@ -38,7 +40,7 @@ func TestParseFunc(t *testing.T) {
 	require.False(t, context.HasErrors(mark))
 
 	mark = context.Mark()
-	funcs, usedTypes := ProcessFuncs(context, functions, structs, types)
+	funcs, usedTypes := ProcessFuncs(context, functions, structs, types, config.ParseConfig{})
 	require.False(t, context.HasErrors(mark))
 
 	require.Len(t, usedTypes, 3)
@@ -74,4 +76,50 @@ func TestParseFunc(t *testing.T) {
 	assert.Equal(t, "", funcs[1].Params[1].Struct.Name)
 	assert.Equal(t, "a2", funcs[1].Params[1].Name)
 	assert.Equal(t, uint(1), funcs[1].Params[1].PointerCount)
+}
+
+func TestParseVoidPointers(t *testing.T) {
+	testFile, err := filepath.Abs("testdata/void_pointers.h")
+	require.NoError(t, err)
+
+	functions, records, typedefs, err := ReadAst(testFile)
+	require.NoError(t, err)
+
+	context := errors.NewParseContext()
+
+	mark := context.Mark()
+	structs, types := ProcessTypes(context, records, typedefs)
+	require.False(t, context.HasErrors(mark), context.String())
+
+	mark = context.Mark()
+	funcs, usedTypes := ProcessFuncs(context, functions, structs, types,
+		config.ParseConfig{
+			VoidType: []config.VoidType{{Function: "functionA", Parameter: "a1", Type: "TypeA"}},
+		})
+	require.False(t, context.HasErrors(mark), context.String())
+
+	require.Len(t, funcs, 1)
+
+	assert.True(t, funcs[0].Params[0].WasVoidPointer)
+
+	require.Len(t, usedTypes, 1)
+	assert.Equal(t, "TypeA", usedTypes[0].TypeName)
+}
+
+func TestParseVoidPointersWithoutMapping(t *testing.T) {
+	testFile, err := filepath.Abs("testdata/void_pointers.h")
+	require.NoError(t, err)
+
+	functions, records, typedefs, err := ReadAst(testFile)
+	require.NoError(t, err)
+
+	context := errors.NewParseContext()
+
+	mark := context.Mark()
+	structs, types := ProcessTypes(context, records, typedefs)
+	require.False(t, context.HasErrors(mark), context.String())
+
+	mark = context.Mark()
+	ProcessFuncs(context, functions, structs, types, config.ParseConfig{})
+	assert.True(t, context.HasErrors(mark))
 }

@@ -17,6 +17,7 @@ package translate
 
 import (
 	"github.com/thales-e-security/header2go/translate/astparse"
+	"github.com/thales-e-security/header2go/translate/config"
 	"github.com/thales-e-security/header2go/translate/errors"
 )
 
@@ -24,10 +25,10 @@ import (
 // into outputDir. If errors are encountered, they are logged in the context and processing
 // continues. The goal is to produce output in almost every instance.
 func Process(context *errors.ParseContext, headerFile, outputDir, configFile string) error {
-	var cfg parseConfig
+	var cfg config.ParseConfig
 	if configFile != "" {
 		var err error
-		cfg, err = configFromFile(configFile)
+		cfg, err = config.FromFile(configFile)
 		if err != nil {
 			return err
 		}

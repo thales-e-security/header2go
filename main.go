@@ -47,27 +47,14 @@ func main() {
 	}
 
 	context := errors.NewParseContext()
+	mark := context.Mark()
 	err := translate.Process(context, headerFile, outputDir, configFile)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
-	typeErrors := context.TypeErrors()
-	if len(typeErrors) > 0 {
-		log.Println("Type processing errors:")
-
-		for _, e := range typeErrors {
-			log.Println("\t" + e.Error())
-		}
-	}
-
-	functionErrors := context.FunctionErrors()
-	if len(functionErrors) > 0 {
-		log.Println("Function processing errors:")
-
-		for _, e := range functionErrors {
-			log.Println("\t" + e.Error())
-		}
+	if context.HasErrors(mark) {
+		log.Printf("One or more errors occurred:\n%s", context.String())
 	}
 
 	log.Println("Done")

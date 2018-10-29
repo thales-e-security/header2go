@@ -41,6 +41,10 @@ type CStructInstance struct {
 	// ArrayCount of 4, where as "int foo" would result in 0.
 	ArrayCount uint
 
+	// WasVoidPointer indicates if this instance was actually a void pointer, which we've mapped to an underlying
+	// type through the user-supplied config.
+	WasVoidPointer bool
+
 	// Struct is the type that was used in this instance.
 	Struct *CStruct
 }
@@ -266,6 +270,7 @@ var longLongStruct = &CStruct{Name: "long long", Basic: true}
 var unsignedLongLongStruct = &CStruct{Name: "unsigned long long", Basic: true}
 var floatStruct = &CStruct{Name: "float", Basic: true}
 var doubleStruct = &CStruct{Name: "double", Basic: true}
+var voidStruct = &CStruct{Name: "void", Basic: true}
 
 func processBasic(ctype string) *CStruct {
 
@@ -308,6 +313,9 @@ func processBasic(ctype string) *CStruct {
 
 	case "double":
 		return doubleStruct
+
+	case "void":
+		return voidStruct
 
 	default:
 		return nil

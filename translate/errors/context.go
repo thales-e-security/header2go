@@ -15,7 +15,11 @@
 
 package errors
 
-import "github.com/elliotchance/c2go/ast"
+import (
+	"strings"
+
+	"github.com/elliotchance/c2go/ast"
+)
 
 // A ParseContext contains error information about a parsing activity.
 type ParseContext struct {
@@ -69,4 +73,31 @@ func (c *ParseContext) TypeErrors() []SourceError {
 // FunctionErrors returns the function errors (possibly empty).
 func (c *ParseContext) FunctionErrors() []SourceError {
 	return cloneErrors(c.functionErrors)
+}
+
+func (c *ParseContext) String() string {
+	builder := new(strings.Builder)
+
+	typeErrors := c.TypeErrors()
+	if len(typeErrors) > 0 {
+		// #nosec G104 function always returns nil error
+		builder.WriteString("Type processing errors:\n")
+
+		for _, e := range typeErrors {
+			// #nosec G104
+			builder.WriteString("\t" + e.Error() + "\n")
+		}
+	}
+
+	functionErrors := c.FunctionErrors()
+	if len(functionErrors) > 0 {
+		// #nosec G104
+		builder.WriteString("Function processing errors:\n")
+
+		for _, e := range functionErrors {
+			// #nosec G104
+			builder.WriteString("\t" + e.Error() + "\n")
+		}
+	}
+	return builder.String()
 }

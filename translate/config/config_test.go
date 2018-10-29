@@ -13,7 +13,7 @@
 // COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package translate
+package config
 
 import (
 	"testing"
@@ -23,11 +23,11 @@ import (
 )
 
 func TestGoodConfig(t *testing.T) {
-	cfg, err := configFromFile("testdata/good-config.toml")
+	cfg, err := FromFile("testdata/good-config.toml")
 	require.NoError(t, err)
 
-	expected := parseConfig{
-		VoidType: []voidType{
+	expected := ParseConfig{
+		VoidType: []VoidType{
 			{Function: "doSomething", Parameter: "val1", Struct: "", Type: "SomeType"},
 			{Function: "doSomethingElse", Parameter: "a", Struct: "SomeStruct", Type: ""},
 		},
@@ -50,7 +50,7 @@ parameter = "a"
 struct = "SomeStruct"
 type = "ThisIsBad"
 `
-	_, err := configFromString(input)
+	_, err := FromString(input)
 	require.Error(t, err)
 }
 
@@ -66,7 +66,7 @@ type = "SomeType"
 function = "doSomethingElse"
 parameter = "a"
 `
-	_, err := configFromString(input)
+	_, err := FromString(input)
 	require.Error(t, err)
 }
 
@@ -76,7 +76,7 @@ func TestFunctionMissing(t *testing.T) {
 parameter = "val1"
 type = "SomeType"
 `
-	_, err := configFromString(input)
+	_, err := FromString(input)
 	require.Error(t, err)
 }
 
@@ -86,16 +86,16 @@ func TestParameterMissing(t *testing.T) {
 function = "doSomething"
 type = "SomeType"
 `
-	_, err := configFromString(input)
+	_, err := FromString(input)
 	require.Error(t, err)
 }
 
 func TestNonsenseConfig(t *testing.T) {
-	_, err := configFromString("not valid")
+	_, err := FromString("not valid")
 	require.Error(t, err)
 }
 
 func TestBadFilePath(t *testing.T) {
-	_, err := configFromFile("this does not exist")
+	_, err := FromFile("this does not exist")
 	require.Error(t, err)
 }

@@ -66,6 +66,11 @@ func TestFixedLengthArrays(t *testing.T) {
 	runTest(t, "09_fixed_length_arrays", "")
 }
 
+func TestVoidPointers(t *testing.T) {
+	testName := "10_void_pointers"
+	runTest(t, testName, path.Join(testDir, testName, "config.toml"))
+}
+
 func runTest(t *testing.T, testName, configFile string) {
 	/*
 		For each directory <X>, we expect to find:
@@ -83,7 +88,7 @@ func runTest(t *testing.T, testName, configFile string) {
 	mark := context.Mark()
 	err = Process(context, path.Join(testDir, testName, "input.h"), outDir, configFile)
 	require.NoError(t, err)
-	require.False(t, context.HasErrors(mark))
+	require.False(t, context.HasErrors(mark), context.String())
 
 	// Compare main.go files (assumes both are gofmt-ed)
 	expected, err := ioutil.ReadFile(path.Join(testDir, testName, "main.go"))

@@ -13,7 +13,7 @@
 // COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package translate
+package config
 
 import (
 	"io/ioutil"
@@ -22,24 +22,27 @@ import (
 	"github.com/pkg/errors"
 )
 
-type parseConfig struct {
-	VoidType []voidType
+// ParseConfig contains user-supplied configuration that affects the parsing process.
+type ParseConfig struct {
+	VoidType []VoidType
 }
 
-type voidType struct {
+// A VoidType defines a mapping between a void pointer parameter and its underlying type.
+type VoidType struct {
 	Function  string
 	Parameter string
 	Type      string
 	Struct    string
 }
 
-func (t voidType) valid() bool {
+func (t VoidType) valid() bool {
 	return t.Function != "" &&
 		t.Parameter != "" &&
 		((t.Type != "" && t.Struct == "") || (t.Type == "" && t.Struct != ""))
 }
 
-func configFromString(config string) (cfg parseConfig, err error) {
+// FromString parses TOML configuration data and returns a new config.
+func FromString(config string) (cfg ParseConfig, err error) {
 	_, err = toml.Decode(config, &cfg)
 
 	if err != nil {
@@ -57,13 +60,14 @@ func configFromString(config string) (cfg parseConfig, err error) {
 	return
 }
 
-func configFromFile(configFile string) (parseConfig, error) {
+// FromFile parses TOML configuration file and returns a new config.
+func FromFile(configFile string) (ParseConfig, error) {
 
 	// #nosec G304 We don't care which file the user wants to try and read; if they have the permission, it will work.
 	configBytes, err := ioutil.ReadFile(configFile)
 	if err != nil {
-		return parseConfig{}, err
+		return ParseConfig{}, err
 	}
 
-	return configFromString(string(configBytes))
+	return FromString(string(configBytes))
 }
