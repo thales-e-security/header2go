@@ -3,7 +3,7 @@ package main
 /*
 {{range .Types}}
 {{if ne "" .TypeName -}} typedef {{end -}} struct {{.Name}} {
-{{range .GetFields}}  {{.Type.CanonicalName}} {{.Name}}{{if ne 0 .ArrayCount}}[{{.ArrayCount}}]{{end}};
+{{range .GetFields}}  {{.Type.CanonicalName}} {{.Pointers}}{{.Name}}{{if ne 0 .ArrayCount}}[{{.ArrayCount}}]{{end}};
 {{end}}} {{.TypeName}};
 {{end}}
 */
