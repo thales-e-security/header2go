@@ -71,6 +71,11 @@ func TestVoidPointers(t *testing.T) {
 	runTest(t, testName, path.Join(testDir, testName, "config.toml"))
 }
 
+func TestStructsWithoutTypedefs(t *testing.T) {
+	testName := "11_structs_without_typdefs"
+	runTest(t, testName, "")
+}
+
 func runTest(t *testing.T, testName, configFile string) {
 	/*
 		For each directory <X>, we expect to find:
