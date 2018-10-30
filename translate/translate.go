@@ -269,10 +269,10 @@ func basicToGo(ctype string) string {
 		return "byte"
 
 	case "signed char":
-		return "byte"
+		return "int8"
 
 	case "unsigned char":
-		return "int8"
+		return "byte"
 
 	case "short", "short int", "signed short", "signed short int":
 		return "int16"

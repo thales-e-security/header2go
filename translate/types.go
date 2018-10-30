@@ -87,7 +87,12 @@ func (t *templateType) CgoStructName() string {
 	}
 
 	if t.Basic {
-		return "C." + t.Name
+		res := "C." + t.Name
+		res = strings.Replace(res, "unsigned", "u", -1)
+		res = strings.Replace(res, "signed", "s", -1)
+		res = strings.Replace(res, " ", "", -1)
+
+		return res
 	}
 
 	return "C.struct_" + t.Name
