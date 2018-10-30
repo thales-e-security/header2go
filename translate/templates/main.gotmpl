@@ -3,7 +3,7 @@ package main
 /*
 {{range .Types}}
 {{if ne "" .TypeName -}} typedef {{end -}} struct {{.Name}} {
-{{range .GetFields}}  {{.Type.CanonicalName}} {{.Name}}{{if ne 0 .ArrayCount}}[{{.ArrayCount}}]{{end}};
+{{range .GetFields}}  {{.Type.CanonicalName}} {{.Pointers}}{{.Name}}{{if ne 0 .ArrayCount}}[{{.ArrayCount}}]{{end}};
 {{end}}} {{.TypeName}};
 {{end}}
 */
@@ -72,11 +72,11 @@ func convertTo{{.Type.GoStructName}}Array{{.ArrayCount}} (a [{{.ArrayCount}}]{{.
 {{range .Funcs}}
 
 //export {{.Name}}
-func {{.Name}} ({{range .GetParams}} {{.SafeName}} {{.Pointers}}{{.Type.CgoStructName}},{{end}}) {{if .GetReturnType}} {{.GetReturnType.Type.CgoStructName}} {{end}} {
+func {{.Name}} ({{range .GetParams}} {{.SafeName}} {{if .WasVoidPointer}}unsafe.Pointer{{else}}{{.Pointers}}{{.Type.CgoStructName}}{{end}},{{end}}) {{if .GetReturnType}} {{.GetReturnType.Type.CgoStructName}} {{end}} {
     {{- range .GetParams}}{{if eq 1 .PointerCount}}
     var {{.ParamAsArg}} *{{.Type.GoArrayTypeName}}
     if {{.SafeName}} != nil {
-        {{.ParamAsArg}} = &{{.Type.GoArrayTypeName}}{cdata: {{.SafeName}}}
+        {{.ParamAsArg}} = &{{.Type.GoArrayTypeName}}{cdata: {{if .WasVoidPointer}}(*{{.Type.CgoStructName}})({{end}}{{.SafeName}}{{if .WasVoidPointer}}){{end}}}
     }
 
     {{end}}{{end}}

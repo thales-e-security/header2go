@@ -25,12 +25,17 @@ import (
 
 //go:generate go-bindata -o translate/bindata.go -pkg translate translate/templates/...
 func main() {
-	if len(os.Args) != 3 {
-		log.Fatal("Usage: header2go <header-file> <output-dir>")
+	if len(os.Args) < 3 {
+		log.Fatal("Usage: header2go <header-file> <output-dir> [<config-file>]")
 	}
 
 	headerFile := os.Args[1]
 	outputDir := os.Args[2]
+
+	var configFile string
+	if len(os.Args) > 3 {
+		configFile = os.Args[3]
+	}
 
 	if _, err := os.Stat(outputDir); err == nil {
 		log.Printf("Overwriting existing path '%s'", outputDir)
@@ -42,27 +47,14 @@ func main() {
 	}
 
 	context := errors.NewParseContext()
-	err := translate.Process(context, headerFile, outputDir)
+	mark := context.Mark()
+	err := translate.Process(context, headerFile, outputDir, configFile)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
-	typeErrors := context.TypeErrors()
-	if len(typeErrors) > 0 {
-		log.Println("Type processing errors:")
-
-		for _, e := range typeErrors {
-			log.Println("\t" + e.Error())
-		}
-	}
-
-	functionErrors := context.FunctionErrors()
-	if len(functionErrors) > 0 {
-		log.Println("Function processing errors:")
-
-		for _, e := range functionErrors {
-			log.Println("\t" + e.Error())
-		}
+	if context.HasErrors(mark) {
+		log.Printf("One or more errors occurred:\n%s", context.String())
 	}
 
 	log.Println("Done")

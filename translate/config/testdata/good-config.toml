@@ -1,0 +1,10 @@
+[[voidType]]
+function = "doSomething"
+parameter = "val1"
+type = "SomeType"
+
+
+[[voidType]]
+function = "doSomethingElse"
+parameter = "a"
+struct = "SomeStruct"

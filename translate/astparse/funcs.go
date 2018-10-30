@@ -20,6 +20,8 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/thales-e-security/header2go/translate/config"
+
 	"github.com/elliotchance/c2go/ast"
 	"github.com/thales-e-security/header2go/translate/errors"
 )
@@ -40,7 +42,7 @@ type CFuncDef struct {
 // ProcessFuncs parses the function list and builds a set of function descriptions. It also figures out the
 // minimal used set of structs and returns this.
 func ProcessFuncs(context *errors.ParseContext, functions []*ast.FunctionDecl,
-	structs []*CStruct, types []*CType) ([]*CFuncDef, []*CStruct) {
+	structs []*CStruct, types []*CType, cfg config.ParseConfig) ([]*CFuncDef, []*CStruct) {
 
 	// Create a map of structs by name
 	structsByName := make(map[string]*CStruct)
@@ -77,6 +79,32 @@ functionLoop:
 						"cannot process function %s: cannot resolve type '%s' used in param %s", funcDecl.Name,
 						paramDecl.Type, paramDecl.Name)
 					continue functionLoop
+				}
+
+				// Check if this is a void pointer. If so, we need to look up the underlying type using the
+				// configuration provided by the user. If we can't find a match, we can't process this function.
+				if p.PointerCount == 1 && p.Struct.Basic && p.Struct.Name == "void" {
+					underlyingStruct, ptrCount := getVoidPointerType(funcDecl.Name, paramDecl.Name, structsByName,
+						typesByName, cfg)
+
+					if underlyingStruct == nil {
+						context.AddFunctionError(funcDecl.Pos,
+							"cannot process function %s: cannot find mapping for void pointer used in param %s",
+							funcDecl.Name, paramDecl.Name)
+						continue functionLoop
+					}
+
+					if ptrCount != 0 {
+						context.AddFunctionError(funcDecl.Pos,
+							"cannot process function %s: cannot handle double pointer in param %s",
+							funcDecl.Name, paramDecl.Name)
+						continue functionLoop
+					}
+
+					// If we get this far, we have a successful match for the void pointer. Let's update
+					// the struct instance appropriately:
+					p.Struct = underlyingStruct
+					p.WasVoidPointer = true
 				}
 
 				// Recursively flag structs as being used
@@ -139,6 +167,30 @@ functionLoop:
 	}
 
 	return funcs, usedStructList
+}
+
+// getVoidPointerType looks up a void pointer instance in the parse config. If we know which type to substitute, this
+// is returned. A nil return indicates we don't have a mapping for this void pointer. The returned uint indicates the
+// pointer count, which is relevant when a typename maps to a pointer to a struct.
+func getVoidPointerType(functionName, paramName string, structsByName map[string]*CStruct,
+	typesByName map[string]*CType, cfg config.ParseConfig) (*CStruct, uint) {
+
+	for _, mapping := range cfg.VoidType {
+		if mapping.Function == functionName && mapping.Parameter == paramName {
+			if mapping.Struct != "" {
+				return structsByName["struct "+mapping.Struct], 0
+			}
+
+			mappedType := typesByName[mapping.Type]
+			if mappedType != nil {
+				return mappedType.Struct, mappedType.PointerCount
+			}
+
+			return nil, 0
+		}
+	}
+
+	return nil, 0
 }
 
 func parseReturnType(functionType string) string {

@@ -82,7 +82,20 @@ func (t *templateType) GoArrayTypeName() string {
 // CgoStructName is a name safe for using with cgo (i.e. C.foo format). It uses the TypeName, if present,
 // otherwise the StructName prefixed with "struct_". In either case, the "C." is prefixed.
 func (t *templateType) CgoStructName() string {
-	return "C." + strings.Replace(t.CanonicalName(), " ", "_", -1)
+	if t.TypeName != "" {
+		return "C." + t.TypeName
+	}
+
+	if t.Basic {
+		res := "C." + t.Name
+		res = strings.Replace(res, "unsigned", "u", -1)
+		res = strings.Replace(res, "signed", "s", -1)
+		res = strings.Replace(res, " ", "", -1)
+
+		return res
+	}
+
+	return "C.struct_" + t.Name
 }
 
 // ConversionFunction is a suitable function name for converting this C type to a Go type.
