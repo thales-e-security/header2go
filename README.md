@@ -27,11 +27,13 @@ go install .
 The command-line interface is very simple, just execute:
 
 ```
-header2go <header-file> <output-dir>
+header2go <header-file> <output-dir> [<config-file>]
 ```
 
 The tool processes `<header-file>` and any included headers, before outputting the boilerplate code into `<output-dir>`.
 The tool will happily overwrite existing files in `<output-dir>`, so be cautious.
+
+Void pointers are handled by mappings in a configuration file. See [the wiki](https://github.com/thales-e-security/header2go/wiki/Void-Pointers).
 
 If the processing completed successfully, it should be possible to compile the skeleton implementation using:
 
@@ -76,6 +78,7 @@ if you include some C code that proves your generated code works, see
 - [ ] Function pointers (e.g. `typedef CK_RV(*CK_C_Finalize) (CK_VOID_PTR pReserved);`, which is a type called `CK_C_Finalize` that is a function returning `CK_RV` and taking an arguments of type `CK_VOID_PTR`.)
 - [ ] Arbitrary return types
 - [ ] Submit a PR to the github.com/elliotchance/c2go to refactor their code, ensuring we don't need to copy bits across to this project.
+- [ ] Generate a suitable config file, based on scanning for void pointers.
 
 ## Acknowledgements
 
