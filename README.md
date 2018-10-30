@@ -42,6 +42,10 @@ go build -o library.so -buildmode=c-shared .
 
 which will produce a `library.so` file that can be linked into C programs.
 
+## Documentation
+
+Please see the [wiki](https://github.com/thales-e-security/header2go/wiki).
+
 ## Background
 
 This project makes it easier to implement legacy APIs, described by C header files, in Go. The
@@ -142,66 +146,6 @@ func goFunctionA(a1 StructA, a2 int32) {
 }
 
 ```
-
-#### Pointers
-
-Pointers are worth some extra explanation. If a C function includes a pointer parameter, we need to handle that in a way
-that allows the Go code to write to that pointer, if needed. We also have to deal with the problem of not knowing whether
-we are being pointed to an array or a single value. (Here I use 'array' to mean some allocated memory that can hold *N*
-values of a particular type).
-
-Consider this C function:
-
-```c
-void writeToMyBuffer(unsigned long *buffer, int maxLength, int *writeCount);
-```
-
-A human can read that signature and assume `buffer` is an array with size `maxLength`, while `writeCount` is probably
-a pointer to a single `int`. Since the tool can't figure that out itself, pointers get converted into a special Go type
-that allows the implementer to access an array of the correct size.
-
-Here is the Go struct that gets generated for the `buffer` parameter:
-
-```go
-type Uint32Array struct {
-  cdata  *C.unsigned_long
-  godata []uint32
-}
-
-func (a *Uint32Array) Slice(len int) []uint32 {
-  if a.godata != nil {
-    return a.godata
-  }
-
-  a.godata = make([]uint32, len)
-  for i := 0; i < len; i++ {
-    a.godata[i] = uint32(*(*C.unsigned_long)(unsafe.Pointer(uintptr(unsafe.Pointer(a.cdata)) + uintptr(i)*unsafe.Sizeof(*a.cdata))))
-  }
-
-  return a.godata
-}
-
-func (a *Uint32Array) writeBack() {
-  for i := range a.godata {
-    *(*C.unsigned_long)(unsafe.Pointer(uintptr(unsafe.Pointer(a.cdata)) + uintptr(i)*unsafe.Sizeof(*a.cdata))) = C.unsigned_long(a.godata[i])
-  }
-}
-```
-
-In the Go implementation, the developer knows how to interpret this value:
-
-```go
-func goWriteToMyBuffer(buffer *Uint32Array, maxLength int16, bytesWritten *Int16Array) {
-  sizedBuffer = buffer.Slice(int(maxLength))
-  
-  // sizedBuffer is now a slice. Writing to its elements will be copied back to the
-  // C memory.
-}
-```
-
-The `writeBack` function is used by the boiler-plate to copy changes back to the C memory.
-
-Currently double-pointers are not supported. PRs welcome.
 
 ## Contributing
 
