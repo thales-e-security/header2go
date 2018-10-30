@@ -218,7 +218,7 @@ if you include some C code that proves your generated code works, see
 - [x] Pointer types as input parameters (copying into Go memory and back)
 - [x] Fixed array types (e.g. char[16])
 - [x] (Testing with) additional header files, i.e. #include statements
-- [ ] Void pointer types (should map to unsafe.Pointer)
+- [x] Void pointer parameter types (should map to unsafe.Pointer)
 - [ ] Pointers to structs that contain pointers. (Makes the `convertFromXXX` functions more complicated).
 - [ ] Function pointers (e.g. `typedef CK_RV(*CK_C_Finalize) (CK_VOID_PTR pReserved);`, which is a type called `CK_C_Finalize` that is a function returning `CK_RV` and taking an arguments of type `CK_VOID_PTR`.)
 - [ ] Arbitrary return types
