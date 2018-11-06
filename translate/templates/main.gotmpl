@@ -43,7 +43,7 @@ func (a *{{.GoArrayTypeName}}) writeBack() {
 
 func convertTo{{.GoStructName}}(s {{.CgoStructName}}) {{.GoStructName}} {
     return {{.GoStructName}} {
-        {{range .GetFields}}{{.GoName}}: {{.ArrayAwareConversion}}(s.{{.SafeName}}),
+        {{range .GetFields}}{{.GoName}}: {{if eq 1 .PointerCount}}{{.Type.GoArrayTypeName}}{cdata: s.{{.SafeName}}}{{else}}{{.ArrayAwareConversion}}(s.{{.SafeName}}){{end}},
         {{end}}
     }
 }

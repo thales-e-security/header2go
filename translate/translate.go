@@ -53,7 +53,7 @@ func Translate(context *errs.ParseContext, functions []*ast.FunctionDecl, record
 	funcs, usedStructs := astparse.ProcessFuncs(context, functions, structs, types, cfg)
 
 	// Find the types used as pointers (and also log an error if we find double-pointers or return-type pointers)
-	pointerTypes, typesNeedingConversion, funcs := listPointerTypes(context, funcs)
+	pointerTypes, typesNeedingConversion, funcs := listPointerTypes(context, funcs, usedStructs)
 
 	arrayTypes := listArrayTypes(context, usedStructs)
 
@@ -116,8 +116,8 @@ func listArrayTypes(context *errs.ParseContext, types []*astparse.CStruct) (arra
 	return
 }
 
-// listPointerTypes parses the function definitions and looks for parameters that use a pointer type.
-func listPointerTypes(context *errs.ParseContext, funcs []*astparse.CFuncDef) (pointerTypes,
+// listPointerTypes parses the function and struct definitions and looks for parameters/fields that use a pointer type.
+func listPointerTypes(context *errs.ParseContext, funcs []*astparse.CFuncDef, usedStructs []*astparse.CStruct) (pointerTypes,
 	pointerFields []*templateType, updatedFuncs []*astparse.CFuncDef) {
 
 	updatedFuncs = funcs
@@ -143,6 +143,19 @@ outerLoop:
 				// Remove this function
 				updatedFuncs = append(updatedFuncs[:i], updatedFuncs[i+1:]...)
 				continue outerLoop
+			}
+		}
+	}
+
+	// Add pointer types that are referenced in structs
+	for _, s := range usedStructs {
+		// We don't need to recurse, since usedStructs contains every referenced type
+		for _, f := range s.Fields {
+			if f.PointerCount == 1 {
+				pointerTypeMap[f.Struct] = true
+			} else if f.PointerCount > 1 {
+				context.AddTypeError(ast.Position{},
+					"Cannot support double pointer type for field %s in struct %s", f.Name, s.Name)
 			}
 		}
 	}

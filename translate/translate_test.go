@@ -76,6 +76,11 @@ func TestStructsWithoutTypedefs(t *testing.T) {
 	runTest(t, testName, "")
 }
 
+func TestStructFieldPointers(t *testing.T) {
+	testName := "12_struct_field_pointers"
+	runTest(t, testName, "")
+}
+
 func runTest(t *testing.T, testName, configFile string) {
 	/*
 		For each directory <X>, we expect to find:
