@@ -207,9 +207,9 @@ func listPointerFields(context *errs.ParseContext, pointerTypes []*astparse.CStr
 		foundTypes[s] = true
 
 		for _, field := range s.Fields {
-			if field.PointerCount > 0 {
+			if field.PointerCount > 1 {
 				context.AddTypeError(ast.Position{}, "Cannot create conversion function for type %s due to "+
-					"having a pointer field %s.", s.Name, field.Name)
+					"having a double pointer field %s.", s.Name, field.Name)
 				continue
 			}
 

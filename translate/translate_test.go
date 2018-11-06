@@ -81,6 +81,11 @@ func TestStructFieldPointers(t *testing.T) {
 	runTest(t, testName, "")
 }
 
+func TestFunctionPointerArgsToStructFieldPointer(t *testing.T) {
+	testName := "13_function_pointer_arg_to_struct_field_pointer"
+	runTest(t, testName, "")
+}
+
 func runTest(t *testing.T, testName, configFile string) {
 	/*
 		For each directory <X>, we expect to find:
