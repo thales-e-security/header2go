@@ -55,7 +55,7 @@ func convertFrom{{.GoStructName}}(s {{.GoStructName}}) {{.CgoStructName}} {
     {{range .GetFields}}{{if ne 0 .PointerCount}}s.{{.GoName}}.writeBack()
     {{end}}{{end -}}
     return {{.CgoStructName}} {
-        {{range .GetFields}}{{.SafeName}}: {{if ne 0 .PointerCount}}s.{{.GoName}}.cdata{{else}}{{.Type.RConversionFunction}}(s.{{.GoName}}){{end}},
+        {{range .GetFields}}{{.SafeName}}: {{if ne 0 .PointerCount}}{{if .WasVoidPointer}}unsafe.Pointer({{end}}s.{{.GoName}}.cdata{{if .WasVoidPointer}}){{end}}{{else}}{{.Type.RConversionFunction}}(s.{{.GoName}}){{end}},
         {{end}}
     }
 }
