@@ -195,6 +195,18 @@ func (t templateTypeInstance) ArrayAwareConversion() string {
 	return fmt.Sprintf("convertTo%sArray%d", t.Type().GoStructName(), t.ArrayCount)
 }
 
+// ArrayDeclarationString produces a fixed length array declaration that maps from Go types to Cgo types.
+func (t templateTypeInstance) ArrayDeclarationString() string {
+
+	var arrayCopyStr string
+	for i := 0; i < int(t.ArrayCount); i++ {
+		arrayCopyStr = arrayCopyStr + fmt.Sprintf("%s(s.%s[%d]), ", t.Type().RConversionFunction(), t.GoName(), i)
+	}
+
+	res := fmt.Sprintf("[%d]%s{%s}", t.ArrayCount, t.Type().CgoStructName(), arrayCopyStr)
+	return res
+}
+
 // templateFunc describes a function found in the C header file.
 type templateFunc astparse.CFuncDef
 
