@@ -3,7 +3,7 @@ package main
 /*
 {{range .Types}}
 {{if ne "" .TypeName -}} typedef {{end -}} struct {{.Name}} {
-{{range .GetFields}}  {{.Type.CanonicalName}} {{.Pointers}}{{.Name}}{{if ne 0 .ArrayCount}}[{{.ArrayCount}}]{{end}};
+{{range .GetFields}}  {{if .WasVoidPointer}}void *{{else}}{{.Type.CanonicalName}} {{.Pointers}}{{end}}{{.Name}}{{if ne 0 .ArrayCount}}[{{.ArrayCount}}]{{end}};
 {{end}}} {{.TypeName}};
 {{end}}
 */
@@ -43,7 +43,7 @@ func (a *{{.GoArrayTypeName}}) writeBack() {
 
 func convertTo{{.GoStructName}}(s {{.CgoStructName}}) {{.GoStructName}} {
     return {{.GoStructName}} {
-        {{range .GetFields}}{{.GoName}}: {{.ArrayAwareConversion}}(s.{{.SafeName}}),
+        {{range .GetFields}}{{.GoName}}: {{if eq 1 .PointerCount}}{{.Type.GoArrayTypeName}}{cdata: {{if .WasVoidPointer}}(*{{.Type.CgoStructName}})({{end}}s.{{.SafeName}}{{if .WasVoidPointer}}){{end}}}{{else}}{{.ArrayAwareConversion}}(s.{{.SafeName}}){{end}},
         {{end}}
     }
 }
@@ -52,8 +52,10 @@ func convertTo{{.GoStructName}}(s {{.CgoStructName}}) {{.GoStructName}} {
 {{range .TypesNeedingConversion}}
 
 func convertFrom{{.GoStructName}}(s {{.GoStructName}}) {{.CgoStructName}} {
+    {{range .GetFields}}{{if ne 0 .PointerCount}}s.{{.GoName}}.writeBack()
+    {{end}}{{end -}}
     return {{.CgoStructName}} {
-        {{range .GetFields}}{{.SafeName}}: {{.Type.RConversionFunction}}(s.{{.GoName}}),
+        {{range .GetFields}}{{.SafeName}}: {{if ne 0 .PointerCount}}{{if .WasVoidPointer}}unsafe.Pointer({{end}}s.{{.GoName}}.cdata{{if .WasVoidPointer}}){{end}}{{else}}{{.Type.RConversionFunction}}(s.{{.GoName}}){{end}},
         {{end}}
     }
 }

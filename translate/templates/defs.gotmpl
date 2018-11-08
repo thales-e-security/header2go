@@ -2,7 +2,7 @@ package main
 
 {{range .Types}}
 type {{.GoStructName}} struct {
-{{range .GetFields}} {{.GoName}} {{if ne 0 .ArrayCount}}[{{.ArrayCount}}]{{end}}{{.Type.GoStructName}}
+{{range .GetFields}} {{.GoName}} {{if ne 0 .ArrayCount}}[{{.ArrayCount}}]{{end}}{{if ne 0 .PointerCount}}{{.Type.GoArrayTypeName}}{{else}}{{.Type.GoStructName}}{{end}}
 {{end}}
 }
 {{end}}

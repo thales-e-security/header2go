@@ -76,6 +76,26 @@ func TestStructsWithoutTypedefs(t *testing.T) {
 	runTest(t, testName, "")
 }
 
+func TestStructFieldPointers(t *testing.T) {
+	testName := "12_struct_field_pointers"
+	runTest(t, testName, "")
+}
+
+func TestFunctionPointerArgsToStructFieldPointer(t *testing.T) {
+	testName := "13_function_pointer_arg_to_struct_field_pointer"
+	runTest(t, testName, "")
+}
+
+func TestVoidPointersInStructs(t *testing.T) {
+	testName := "14_void_pointers_in_structs"
+	runTest(t, testName, path.Join(testDir, testName, "config.toml"))
+}
+
+func TestVoidPointersInStructsWithTypedefs(t *testing.T) {
+	testName := "15_void_pointers_in_structs_with_typedefs"
+	runTest(t, testName, path.Join(testDir, testName, "config.toml"))
+}
+
 func runTest(t *testing.T, testName, configFile string) {
 	/*
 		For each directory <X>, we expect to find:

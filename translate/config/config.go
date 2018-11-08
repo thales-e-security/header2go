@@ -24,21 +24,30 @@ import (
 
 // ParseConfig contains user-supplied configuration that affects the parsing process.
 type ParseConfig struct {
-	VoidType []VoidType
+	VoidParam []VoidParam
+	VoidField []VoidField
 }
 
-// A VoidType defines a mapping between a void pointer parameter and its underlying type.
-type VoidType struct {
-	Function  string
-	Parameter string
-	Type      string
-	Struct    string
+// A VoidParam defines a mapping between a void pointer parameter and its underlying type.
+type VoidParam struct {
+	Function    string
+	Parameter   string
+	ReplaceWith string
 }
 
-func (t VoidType) valid() bool {
-	return t.Function != "" &&
-		t.Parameter != "" &&
-		((t.Type != "" && t.Struct == "") || (t.Type == "" && t.Struct != ""))
+func (t VoidParam) valid() bool {
+	return t.Function != "" && t.Parameter != "" && t.ReplaceWith != ""
+}
+
+// A VoidField defines a mapping between a void pointer struct field and its underlying type.
+type VoidField struct {
+	TypeName    string
+	Field       string
+	ReplaceWith string
+}
+
+func (f VoidField) valid() bool {
+	return f.TypeName != "" && f.Field != "" && f.ReplaceWith != ""
 }
 
 // FromString parses TOML configuration data and returns a new config.
@@ -51,9 +60,15 @@ func FromString(config string) (cfg ParseConfig, err error) {
 	}
 
 	// Check it's valid
-	for _, v := range cfg.VoidType {
+	for _, v := range cfg.VoidParam {
 		if !v.valid() {
-			err = errors.New("invalid void type mapping in config file")
+			err = errors.New("invalid void param mapping in config file")
+			return
+		}
+	}
+	for _, v := range cfg.VoidField {
+		if !v.valid() {
+			err = errors.New("invalid void field mapping in config file")
 			return
 		}
 	}

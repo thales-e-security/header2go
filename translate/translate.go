@@ -47,13 +47,13 @@ func Translate(context *errs.ParseContext, functions []*ast.FunctionDecl, record
 	typeDeclarations []*ast.TypedefDecl, outputDir string, cfg config.ParseConfig) error {
 
 	// Process the raw AST data and convert into our representation of structs and types
-	structs, types := astparse.ProcessTypes(context, recordDeclarations, typeDeclarations)
+	structs, types := astparse.ProcessTypes(context, recordDeclarations, typeDeclarations, cfg)
 
 	// Process the raw AST data for functions, noting which structs are actually used (in the signatures).
 	funcs, usedStructs := astparse.ProcessFuncs(context, functions, structs, types, cfg)
 
 	// Find the types used as pointers (and also log an error if we find double-pointers or return-type pointers)
-	pointerTypes, typesNeedingConversion, funcs := listPointerTypes(context, funcs)
+	pointerTypes, typesNeedingConversion, funcs := listPointerTypes(context, funcs, usedStructs)
 
 	arrayTypes := listArrayTypes(context, usedStructs)
 
@@ -87,7 +87,7 @@ func Translate(context *errs.ParseContext, functions []*ast.FunctionDecl, record
 }
 
 // listArrayTypes parses the types and finds each array type + size combination.
-func listArrayTypes(context *errs.ParseContext, types []*astparse.CStruct) (arrayTypes []templateArrayType) {
+func listArrayTypes(_ *errs.ParseContext, types []*astparse.CStruct) (arrayTypes []templateArrayType) {
 	foundTypes := make(map[*astparse.CStruct]map[uint]bool)
 
 	for _, t := range types {
@@ -116,8 +116,8 @@ func listArrayTypes(context *errs.ParseContext, types []*astparse.CStruct) (arra
 	return
 }
 
-// listPointerTypes parses the function definitions and looks for parameters that use a pointer type.
-func listPointerTypes(context *errs.ParseContext, funcs []*astparse.CFuncDef) (pointerTypes,
+// listPointerTypes parses the function and struct definitions and looks for parameters/fields that use a pointer type.
+func listPointerTypes(context *errs.ParseContext, funcs []*astparse.CFuncDef, usedStructs []*astparse.CStruct) (pointerTypes,
 	pointerFields []*templateType, updatedFuncs []*astparse.CFuncDef) {
 
 	updatedFuncs = funcs
@@ -143,6 +143,19 @@ outerLoop:
 				// Remove this function
 				updatedFuncs = append(updatedFuncs[:i], updatedFuncs[i+1:]...)
 				continue outerLoop
+			}
+		}
+	}
+
+	// Add pointer types that are referenced in structs
+	for _, s := range usedStructs {
+		// We don't need to recurse, since usedStructs contains every referenced type
+		for _, f := range s.Fields {
+			if f.PointerCount == 1 {
+				pointerTypeMap[f.Struct] = true
+			} else if f.PointerCount > 1 {
+				context.AddTypeError(ast.Position{},
+					"Cannot support double pointer type for field %s in struct %s", f.Name, s.Name)
 			}
 		}
 	}
@@ -194,9 +207,9 @@ func listPointerFields(context *errs.ParseContext, pointerTypes []*astparse.CStr
 		foundTypes[s] = true
 
 		for _, field := range s.Fields {
-			if field.PointerCount > 0 {
+			if field.PointerCount > 1 {
 				context.AddTypeError(ast.Position{}, "Cannot create conversion function for type %s due to "+
-					"having a pointer field %s.", s.Name, field.Name)
+					"having a double pointer field %s.", s.Name, field.Name)
 				continue
 			}
 
@@ -250,6 +263,7 @@ func writeTemplate(templateName string, data interface{}) ([]byte, error) {
 	if err != nil {
 		log.Println("WARNING: failed to format source. This means the generation has probably gone wrong somewhere.")
 		log.Println(err.Error())
+		log.Println("\n" + string(buffer.Bytes()))
 		return buffer.Bytes(), nil
 	}
 
@@ -306,6 +320,7 @@ func basicToGo(ctype string) string {
 
 	default:
 		// should never happen
-		return "ERROR"
+		log.Fatalf("Cannot map basic type: %s", ctype)
+		return ""
 	}
 }

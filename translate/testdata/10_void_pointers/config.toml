@@ -1,4 +1,4 @@
-[[voidType]]
+[[voidParam]]
 function = "functionA"
 parameter = "a1"
-type = "TypeA"
+replaceWith = "TypeA"

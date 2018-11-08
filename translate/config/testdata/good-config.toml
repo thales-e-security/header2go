@@ -1,10 +1,10 @@
-[[voidType]]
-function = "doSomething"
-parameter = "val1"
-type = "SomeType"
+[[voidParam]]
+function = "doSomething"   # The function name to match
+parameter = "val1"         # The parameter name
+replaceWith = "SomeType"   # The replacement value (the concrete type). If this is a struct name, specify as "struct <foo>".
 
 
-[[voidType]]
-function = "doSomethingElse"
-parameter = "a"
-struct = "SomeStruct"
+[[voidField]]
+typeName = "struct someStruct"       # The struct or type to match. If it is a struct name, prefix with "struct "
+field = "someField"                  # The field name to replace
+replaceWith = "struct someStruct"    # The replacement value (the concrete type). If this is a struct name, specify as "struct <foo>".

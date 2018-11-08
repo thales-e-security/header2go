@@ -19,6 +19,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/thales-e-security/header2go/translate/config"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/thales-e-security/header2go/translate/errors"
@@ -35,7 +37,7 @@ func TestTypeParsing(t *testing.T) {
 
 	context := errors.NewParseContext()
 	mark := context.Mark()
-	structs, types := ProcessTypes(context, records, typedefs)
+	structs, types := ProcessTypes(context, records, typedefs, config.ParseConfig{})
 	require.False(t, context.HasErrors(mark))
 
 	// Validate lengths
@@ -119,7 +121,7 @@ func TestDoubleTypeDef(t *testing.T) {
 
 	context := errors.NewParseContext()
 	mark := context.Mark()
-	ProcessTypes(context, records, typedefs)
+	ProcessTypes(context, records, typedefs, config.ParseConfig{})
 	require.False(t, context.HasErrors(mark))
 }
 
@@ -132,7 +134,7 @@ func TestArrayParsing(t *testing.T) {
 
 	context := errors.NewParseContext()
 	mark := context.Mark()
-	structs, _ := ProcessTypes(context, records, typedefs)
+	structs, _ := ProcessTypes(context, records, typedefs, config.ParseConfig{})
 	require.False(t, context.HasErrors(mark))
 
 	// Validate lengths
@@ -140,4 +142,62 @@ func TestArrayParsing(t *testing.T) {
 
 	assert.Equal(t, uint(0), structs[0].Fields[0].ArrayCount)
 	assert.Equal(t, uint(15), structs[0].Fields[1].ArrayCount)
+}
+
+func TestVoidPointerField(t *testing.T) {
+	cfg := config.ParseConfig{
+		VoidField: []config.VoidField{
+			{TypeName: "struct A", Field: "ptr", ReplaceWith: "B"},
+		},
+	}
+
+	testFile, err := filepath.Abs("testdata/void_pointer_struct_fields.h")
+	require.NoError(t, err)
+
+	_, records, typedefs, err := ReadAst(testFile)
+	require.NoError(t, err)
+
+	context := errors.NewParseContext()
+	mark := context.Mark()
+	structs, _ := ProcessTypes(context, records, typedefs, cfg)
+	require.False(t, context.HasErrors(mark))
+
+	require.Len(t, structs, 1)
+
+	assert.Equal(t, "A", structs[0].Name)
+	assert.Equal(t, "ptr", structs[0].Fields[0].Name)
+	assert.Equal(t, "unsigned char", structs[0].Fields[0].Struct.Name)
+	assert.Equal(t, uint(1), structs[0].Fields[0].PointerCount)
+	assert.True(t, structs[0].Fields[0].WasVoidPointer)
+}
+
+func TestVoidPointerFieldWithTypedef(t *testing.T) {
+
+	cfg, err := config.FromString(`
+[[voidField]]
+typeName = "TypeA"
+field = "ptr"
+replaceWith = "TypeB"
+`)
+
+	require.NoError(t, err)
+
+	testFile, err := filepath.Abs("testdata/void_pointer_struct_fields_typedef.h")
+	require.NoError(t, err)
+
+	_, records, typedefs, err := ReadAst(testFile)
+	require.NoError(t, err)
+
+	context := errors.NewParseContext()
+	mark := context.Mark()
+	structs, _ := ProcessTypes(context, records, typedefs, cfg)
+	require.False(t, context.HasErrors(mark))
+
+	require.Len(t, structs, 1)
+
+	assert.Equal(t, "TypeA", structs[0].TypeName)
+	assert.Equal(t, "ptr", structs[0].Fields[1].Name)
+	assert.Equal(t, "unsigned char", structs[0].Fields[1].Struct.Name)
+	assert.Equal(t, uint(1), structs[0].Fields[1].PointerCount)
+	assert.True(t, structs[0].Fields[1].WasVoidPointer)
 }

@@ -27,64 +27,78 @@ func TestGoodConfig(t *testing.T) {
 	require.NoError(t, err)
 
 	expected := ParseConfig{
-		VoidType: []VoidType{
-			{Function: "doSomething", Parameter: "val1", Struct: "", Type: "SomeType"},
-			{Function: "doSomethingElse", Parameter: "a", Struct: "SomeStruct", Type: ""},
+		VoidParam: []VoidParam{
+			{Function: "doSomething", Parameter: "val1", ReplaceWith: "SomeType"},
+		},
+		VoidField: []VoidField{
+			{TypeName: "struct someStruct", Field: "someField", ReplaceWith: "struct someStruct"},
 		},
 	}
 
 	assert.Equal(t, expected, cfg)
 }
 
-func TestStructAndTypeDeclared(t *testing.T) {
+func TestVoidParamFunctionMissing(t *testing.T) {
 	input := `
-[[voidType]]
-function = "doSomething"
+[[voidParam]]
+#function = "doSomething"
 parameter = "val1"
-type = "SomeType"
- 
- 
-[[voidType]]
-function = "doSomethingElse"
-parameter = "a"
-struct = "SomeStruct"
-type = "ThisIsBad"
+replaceWith = "SomeType" 
 `
 	_, err := FromString(input)
 	require.Error(t, err)
 }
 
-func TestStructAndTypeMissing(t *testing.T) {
+func TestVoidParamParameterMissing(t *testing.T) {
 	input := `
-[[voidType]]
+[[voidParam]]
 function = "doSomething"
-parameter = "val1"
-type = "SomeType"
- 
- 
-[[voidType]]
-function = "doSomethingElse"
-parameter = "a"
+#parameter = "val1"
+replaceWith = "SomeType" 
 `
 	_, err := FromString(input)
 	require.Error(t, err)
 }
 
-func TestFunctionMissing(t *testing.T) {
+func TestVoidParamReplaceWithMissing(t *testing.T) {
 	input := `
-[[voidType]]
+[[voidParam]]
+function = "doSomething"
 parameter = "val1"
-type = "SomeType"
+#replaceWith = "SomeType" 
 `
 	_, err := FromString(input)
 	require.Error(t, err)
 }
 
-func TestParameterMissing(t *testing.T) {
+func TestVoidFieldTypeNameMissing(t *testing.T) {
 	input := `
-[[voidType]]
-function = "doSomething"
-type = "SomeType"
+[[voidField]]
+#typeName = "struct someStruct"
+field = "someField"
+replaceWith = "struct someStruct" 
+`
+	_, err := FromString(input)
+	require.Error(t, err)
+}
+
+func TestVoidFieldFieldMissing(t *testing.T) {
+	input := `
+[[voidField]]
+typeName = "struct someStruct"
+#field = "someField"
+replaceWith = "struct someStruct" 
+`
+	_, err := FromString(input)
+	require.Error(t, err)
+}
+
+func TestVoidFieldReplaceWithMissing(t *testing.T) {
+	input := `
+[[voidField]]
+typeName = "struct someStruct"
+field = "someField"
+#replaceWith = "struct someStruct" 
 `
 	_, err := FromString(input)
 	require.Error(t, err)

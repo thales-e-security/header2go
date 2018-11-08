@@ -36,7 +36,7 @@ func TestParseFunc(t *testing.T) {
 	context := errors.NewParseContext()
 
 	mark := context.Mark()
-	structs, types := ProcessTypes(context, records, typedefs)
+	structs, types := ProcessTypes(context, records, typedefs, config.ParseConfig{})
 	require.False(t, context.HasErrors(mark))
 
 	mark = context.Mark()
@@ -88,15 +88,15 @@ func TestParseVoidPointers(t *testing.T) {
 	context := errors.NewParseContext()
 
 	mark := context.Mark()
-	structs, types := ProcessTypes(context, records, typedefs)
+	structs, types := ProcessTypes(context, records, typedefs, config.ParseConfig{})
 	require.False(t, context.HasErrors(mark), context.String())
 
 	mark = context.Mark()
 	funcs, usedTypes := ProcessFuncs(context, functions, structs, types,
 		config.ParseConfig{
-			VoidType: []config.VoidType{
-				{Function: "functionA", Parameter: "a1", Type: "TypeA"},
-				{Function: "functionA", Parameter: "a2", Struct: "B"},
+			VoidParam: []config.VoidParam{
+				{Function: "functionA", Parameter: "a1", ReplaceWith: "TypeA"},
+				{Function: "functionA", Parameter: "a2", ReplaceWith: "struct B"},
 			},
 		})
 	require.False(t, context.HasErrors(mark), context.String())
@@ -120,7 +120,7 @@ func TestParseVoidPointersWithoutMapping(t *testing.T) {
 	context := errors.NewParseContext()
 
 	mark := context.Mark()
-	structs, types := ProcessTypes(context, records, typedefs)
+	structs, types := ProcessTypes(context, records, typedefs, config.ParseConfig{})
 	require.False(t, context.HasErrors(mark), context.String())
 
 	mark = context.Mark()
