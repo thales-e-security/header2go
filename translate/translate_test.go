@@ -96,6 +96,10 @@ func TestVoidPointersInStructsWithTypedefs(t *testing.T) {
 	runTest(t, testName, path.Join(testDir, testName, "config.toml"))
 }
 
+func TestFixedLengthArraysInPointerArgs(t *testing.T) {
+	runTest(t, "16_fixed_length_arrays_in_pointer_args", "")
+}
+
 func runTest(t *testing.T, testName, configFile string) {
 	/*
 		For each directory <X>, we expect to find:
