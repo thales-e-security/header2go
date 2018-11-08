@@ -3,7 +3,7 @@ package main
 /*
 {{range .Types}}
 {{if ne "" .TypeName -}} typedef {{end -}} struct {{.Name}} {
-{{range .GetFields}}  {{.Type.CanonicalName}} {{.Pointers}}{{.Name}}{{if ne 0 .ArrayCount}}[{{.ArrayCount}}]{{end}};
+{{range .GetFields}}  {{if .WasVoidPointer}}void *{{else}}{{.Type.CanonicalName}} {{.Pointers}}{{end}}{{.Name}}{{if ne 0 .ArrayCount}}[{{.ArrayCount}}]{{end}};
 {{end}}} {{.TypeName}};
 {{end}}
 */
@@ -43,7 +43,7 @@ func (a *{{.GoArrayTypeName}}) writeBack() {
 
 func convertTo{{.GoStructName}}(s {{.CgoStructName}}) {{.GoStructName}} {
     return {{.GoStructName}} {
-        {{range .GetFields}}{{.GoName}}: {{if eq 1 .PointerCount}}{{.Type.GoArrayTypeName}}{cdata: s.{{.SafeName}}}{{else}}{{.ArrayAwareConversion}}(s.{{.SafeName}}){{end}},
+        {{range .GetFields}}{{.GoName}}: {{if eq 1 .PointerCount}}{{.Type.GoArrayTypeName}}{cdata: {{if .WasVoidPointer}}(*{{.Type.CgoStructName}})({{end}}s.{{.SafeName}}{{if .WasVoidPointer}}){{end}}}{{else}}{{.ArrayAwareConversion}}(s.{{.SafeName}}){{end}},
         {{end}}
     }
 }

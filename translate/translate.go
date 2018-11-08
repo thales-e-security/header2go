@@ -47,7 +47,7 @@ func Translate(context *errs.ParseContext, functions []*ast.FunctionDecl, record
 	typeDeclarations []*ast.TypedefDecl, outputDir string, cfg config.ParseConfig) error {
 
 	// Process the raw AST data and convert into our representation of structs and types
-	structs, types := astparse.ProcessTypes(context, recordDeclarations, typeDeclarations)
+	structs, types := astparse.ProcessTypes(context, recordDeclarations, typeDeclarations, cfg)
 
 	// Process the raw AST data for functions, noting which structs are actually used (in the signatures).
 	funcs, usedStructs := astparse.ProcessFuncs(context, functions, structs, types, cfg)
@@ -263,6 +263,7 @@ func writeTemplate(templateName string, data interface{}) ([]byte, error) {
 	if err != nil {
 		log.Println("WARNING: failed to format source. This means the generation has probably gone wrong somewhere.")
 		log.Println(err.Error())
+		log.Println("\n" + string(buffer.Bytes()))
 		return buffer.Bytes(), nil
 	}
 
@@ -319,6 +320,6 @@ func basicToGo(ctype string) string {
 
 	default:
 		// should never happen
-		return "ERROR"
+		return "ERROR_" + ctype
 	}
 }

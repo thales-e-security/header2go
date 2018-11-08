@@ -175,13 +175,13 @@ functionLoop:
 func getVoidPointerType(functionName, paramName string, structsByName map[string]*CStruct,
 	typesByName map[string]*CType, cfg config.ParseConfig) (*CStruct, uint) {
 
-	for _, mapping := range cfg.VoidType {
+	for _, mapping := range cfg.VoidParam {
 		if mapping.Function == functionName && mapping.Parameter == paramName {
-			if mapping.Struct != "" {
-				return structsByName["struct "+mapping.Struct], 0
+			if strings.HasPrefix(mapping.ReplaceWith, "struct ") {
+				return structsByName[mapping.ReplaceWith], 0
 			}
 
-			mappedType := typesByName[mapping.Type]
+			mappedType := typesByName[mapping.ReplaceWith]
 			if mappedType != nil {
 				return mappedType.Struct, mappedType.PointerCount
 			}

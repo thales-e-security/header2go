@@ -21,6 +21,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/thales-e-security/header2go/translate/config"
+
 	"github.com/elliotchance/c2go/ast"
 	"github.com/thales-e-security/header2go/translate/errors"
 )
@@ -131,7 +133,7 @@ func processTypeNode(context *errors.ParseContext, n ast.Node, newType *CType) (
 // ProcessTypes parses the AST information and converts it into lists of CStructs and CTypes. If errors are encountered
 // during processing, they are recorded in the context and processing continues.
 func ProcessTypes(context *errors.ParseContext, recordDeclarations []*ast.RecordDecl,
-	typeDeclarations []*ast.TypedefDecl) (structs []*CStruct, types []*CType) {
+	typeDeclarations []*ast.TypedefDecl, cfg config.ParseConfig) (structs []*CStruct, types []*CType) {
 
 	structsByAddress := make(map[ast.Address]*CStruct)
 	structsByName := make(map[string]*CStruct)
@@ -217,40 +219,71 @@ func ProcessTypes(context *errors.ParseContext, recordDeclarations []*ast.Record
 				continue
 			}
 
+			res := CStructInstance{
+				Name: f.Name,
+			}
+
 			// Is this an array type?
-			nonArrayType, arrayCount := getArrayLength(f.Type)
+			var nonArrayType string
+			nonArrayType, res.ArrayCount = getArrayLength(f.Type)
 
 			// Count any pointers
-			nonPointerType, numPointers := stripPointers(nonArrayType)
+			var nonPointerType string
+			nonPointerType, res.PointerCount = stripPointers(nonArrayType)
 
 			// Check if this is a basic type
-			childStruct := processBasic(nonPointerType)
+			res.Struct = processBasic(nonPointerType)
 
-			// If not, look in the known types
-			if childStruct == nil {
+			if res.Struct != nil {
+				// If it's a basic type, double check whether it's a void pointer.
+
+				// Check if this is a void pointer. If so, we need to look up the underlying type using the
+				// configuration provided by the user. If we can't find a match, we can't process this function.
+				if res.PointerCount == 1 && res.Struct.Name == "void" {
+					underlyingStruct, ptrCount := getFieldVoidPointerType(s, f.Name, structsByName,
+						typesByName, cfg)
+
+					if underlyingStruct == nil {
+						context.AddTypeError(f.Pos,
+							"cannot process type %s: cannot find mapping for void pointer used in field %s",
+							s.Name, f.Name)
+						continue
+					}
+
+					if ptrCount != 0 {
+						context.AddFunctionError(f.Pos,
+							"cannot process type %s: cannot handle double pointer in field %s",
+							s.Name, f.Name)
+						continue
+					}
+
+					// If we get this far, we have a successful match for the void pointer. Let's update
+					// the struct instance appropriately:
+					res.Struct = underlyingStruct
+					res.WasVoidPointer = true
+				}
+
+			} else {
+				// If not, look in the known types
+
 				if strings.HasPrefix(nonPointerType, "struct ") {
-					childStruct = structsByName[strings.TrimPrefix(nonPointerType, "struct ")]
+					res.Struct = structsByName[strings.TrimPrefix(nonPointerType, "struct ")]
 				} else {
 					childType := typesByName[nonPointerType]
 					if childType != nil {
-						childStruct = childType.Struct
-						numPointers += childType.PointerCount
+						res.Struct = childType.Struct
+						res.PointerCount += childType.PointerCount
 					}
 				}
 
-				if childStruct == nil {
+				if res.Struct == nil {
 					context.AddTypeError(f.Pos, "cannot find type '%s' referenced in field '%s' of struct '%s'",
 						f.Type, f.Name, s.Name)
 					continue
 				}
 			}
 
-			s.Fields = append(s.Fields, &CStructInstance{
-				Name:         f.Name,
-				Struct:       childStruct,
-				PointerCount: numPointers,
-				ArrayCount:   arrayCount,
-			})
+			s.Fields = append(s.Fields, &res)
 		}
 	}
 
@@ -345,4 +378,36 @@ func getArrayLength(typeName string) (nonArrayType string, arrayCount uint) {
 
 	nonArrayType = typeName
 	return
+}
+
+// getFieldVoidPointerType looks up a void pointer instance in the parse config. If we know which type to substitute, this
+// is returned. A nil return indicates we don't have a mapping for this void pointer. The returned uint indicates the
+// pointer count, which is relevant when a typename maps to a pointer to a struct.
+func getFieldVoidPointerType(parentType *CStruct, fieldName string, structsByName map[string]*CStruct,
+	typesByName map[string]*CType, cfg config.ParseConfig) (*CStruct, uint) {
+
+	var nameToSearch string
+	if parentType.TypeName != "" {
+		nameToSearch = parentType.TypeName
+	} else {
+		nameToSearch = "struct " + parentType.Name
+	}
+
+	for _, mapping := range cfg.VoidField {
+
+		if mapping.TypeName == nameToSearch && mapping.Field == fieldName {
+			if strings.HasPrefix(mapping.ReplaceWith, "struct ") {
+				return structsByName[mapping.ReplaceWith], 0
+			}
+
+			mappedType := typesByName[mapping.ReplaceWith]
+			if mappedType != nil {
+				return mappedType.Struct, mappedType.PointerCount
+			}
+
+			return nil, 0
+		}
+	}
+
+	return nil, 0
 }
