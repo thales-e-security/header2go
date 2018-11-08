@@ -39,6 +39,7 @@ func (t VoidParam) valid() bool {
 	return t.Function != "" && t.Parameter != "" && t.ReplaceWith != ""
 }
 
+// A VoidField defines a mapping between a void pointer struct field and its underlying type.
 type VoidField struct {
 	TypeName    string
 	Field       string
