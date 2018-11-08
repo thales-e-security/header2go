@@ -87,7 +87,7 @@ func Translate(context *errs.ParseContext, functions []*ast.FunctionDecl, record
 }
 
 // listArrayTypes parses the types and finds each array type + size combination.
-func listArrayTypes(context *errs.ParseContext, types []*astparse.CStruct) (arrayTypes []templateArrayType) {
+func listArrayTypes(_ *errs.ParseContext, types []*astparse.CStruct) (arrayTypes []templateArrayType) {
 	foundTypes := make(map[*astparse.CStruct]map[uint]bool)
 
 	for _, t := range types {
@@ -320,6 +320,7 @@ func basicToGo(ctype string) string {
 
 	default:
 		// should never happen
-		return "ERROR_" + ctype
+		log.Fatalf("Cannot map basic type: %s", ctype)
+		return ""
 	}
 }

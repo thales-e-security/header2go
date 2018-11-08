@@ -1,5 +1,7 @@
+typedef void *VOID_PTR;
+
 struct A {
-  void *ptr;
+  VOID_PTR ptr;
 };
 
 typedef unsigned char B;

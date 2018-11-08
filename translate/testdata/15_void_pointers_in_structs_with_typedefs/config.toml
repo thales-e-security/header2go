@@ -1,0 +1,4 @@
+[[voidField]]
+typeName = "TypeA"
+field = "ptr"
+replaceWith = "TypeB"

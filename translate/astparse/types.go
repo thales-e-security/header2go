@@ -234,38 +234,7 @@ func ProcessTypes(context *errors.ParseContext, recordDeclarations []*ast.Record
 			// Check if this is a basic type
 			res.Struct = processBasic(nonPointerType)
 
-			if res.Struct != nil {
-				// If it's a basic type, double check whether it's a void pointer.
-
-				// Check if this is a void pointer. If so, we need to look up the underlying type using the
-				// configuration provided by the user. If we can't find a match, we can't process this function.
-				if res.PointerCount == 1 && res.Struct.Name == "void" {
-					underlyingStruct, ptrCount := getFieldVoidPointerType(s, f.Name, structsByName,
-						typesByName, cfg)
-
-					if underlyingStruct == nil {
-						context.AddTypeError(f.Pos,
-							"cannot process type %s: cannot find mapping for void pointer used in field %s",
-							s.Name, f.Name)
-						continue
-					}
-
-					if ptrCount != 0 {
-						context.AddFunctionError(f.Pos,
-							"cannot process type %s: cannot handle double pointer in field %s",
-							s.Name, f.Name)
-						continue
-					}
-
-					// If we get this far, we have a successful match for the void pointer. Let's update
-					// the struct instance appropriately:
-					res.Struct = underlyingStruct
-					res.WasVoidPointer = true
-				}
-
-			} else {
-				// If not, look in the known types
-
+			if res.Struct == nil {
 				if strings.HasPrefix(nonPointerType, "struct ") {
 					res.Struct = structsByName[strings.TrimPrefix(nonPointerType, "struct ")]
 				} else {
@@ -281,6 +250,31 @@ func ProcessTypes(context *errors.ParseContext, recordDeclarations []*ast.Record
 						f.Type, f.Name, s.Name)
 					continue
 				}
+			}
+
+			// If it's a basic type, double check whether it's a void pointer.
+			if res.PointerCount == 1 && res.Struct.Name == "void" {
+				underlyingStruct, ptrCount := getFieldVoidPointerType(s, f.Name, structsByName,
+					typesByName, cfg)
+
+				if underlyingStruct == nil {
+					context.AddTypeError(f.Pos,
+						"cannot process type %s: cannot find mapping for void pointer used in field %s",
+						s.Name, f.Name)
+					continue
+				}
+
+				if ptrCount != 0 {
+					context.AddFunctionError(f.Pos,
+						"cannot process type %s: cannot handle double pointer in field %s",
+						s.Name, f.Name)
+					continue
+				}
+
+				// If we get this far, we have a successful match for the void pointer. Let's update
+				// the struct instance appropriately:
+				res.Struct = underlyingStruct
+				res.WasVoidPointer = true
 			}
 
 			s.Fields = append(s.Fields, &res)

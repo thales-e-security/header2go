@@ -170,3 +170,34 @@ func TestVoidPointerField(t *testing.T) {
 	assert.Equal(t, uint(1), structs[0].Fields[0].PointerCount)
 	assert.True(t, structs[0].Fields[0].WasVoidPointer)
 }
+
+func TestVoidPointerFieldWithTypedef(t *testing.T) {
+
+	cfg, err := config.FromString(`
+[[voidField]]
+typeName = "TypeA"
+field = "ptr"
+replaceWith = "TypeB"
+`)
+
+	require.NoError(t, err)
+
+	testFile, err := filepath.Abs("testdata/void_pointer_struct_fields_typedef.h")
+	require.NoError(t, err)
+
+	_, records, typedefs, err := ReadAst(testFile)
+	require.NoError(t, err)
+
+	context := errors.NewParseContext()
+	mark := context.Mark()
+	structs, _ := ProcessTypes(context, records, typedefs, cfg)
+	require.False(t, context.HasErrors(mark))
+
+	require.Len(t, structs, 1)
+
+	assert.Equal(t, "TypeA", structs[0].TypeName)
+	assert.Equal(t, "ptr", structs[0].Fields[1].Name)
+	assert.Equal(t, "unsigned char", structs[0].Fields[1].Struct.Name)
+	assert.Equal(t, uint(1), structs[0].Fields[1].PointerCount)
+	assert.True(t, structs[0].Fields[1].WasVoidPointer)
+}
